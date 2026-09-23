@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Jev Judger · 从夯到拉</title><link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="/style.css"></head>
+<body>
+  <header class="topbar"><a class="brand" href="/"><span class="brand-icon">J.</span> JEV JUDGER<span class="beta">娱乐法庭</span></a><a class="how-link" href="#how">判案依据 <span>↗</span></a></header>
+  <main>
+    <section class="hero">
+      <div class="eyebrow"><span class="live-dot"></span> POWERED BY JEV. JUDGING JEV.</div>
+      <h1>是<span class="hot">夯</span>，还是<span class="cold">拉</span>？<br>让 Jev 自己说。</h1>
+      <p class="intro">给项目贴上 Jev 的标签很容易。<br class="mobile-br"> 至于有没有必要，另说。</p>
+      <form id="judge-form"><label for="repo-url" class="sr-only">GitHub 仓库链接</label><div class="input-wrap"><span class="git-mark" aria-hidden="true">⌘</span><input id="repo-url" name="url" type="url" placeholder="https://github.com/someone/another-jev-project" autocomplete="off" required><button id="submit" type="submit">即刻开庭 <span>↗</span></button></div></form>
+      <div class="form-meta"><span>公开仓库 · 抽样读代码 · 只审项目，不审人</span><button id="demo" class="text-button">先看一个虚构示例 →</button></div>
+      <p id="config" class="config" hidden></p><p id="status" role="status" aria-live="polite" hidden></p>
+    </section>
+    <section class="tier-scale" aria-label="从夯到拉五档评价"><div style="--tier:#ff6552"><b>夯</b><span>用在刀刃上</span></div><div style="--tier:#ffb454"><b>顶级</b><span>确实有点东西</span></div><div style="--tier:#f1d563"><b>人上人</b><span>有活，但不多</span></div><div style="--tier:#88c6a8"><b>NPC</b><span>接上了，然后呢</span></div><div style="--tier:#95acf4"><b>拉</b><span>这也能怪 Jev？</span></div></section>
+    <section id="result" hidden aria-label="评价结果"></section>
+    <section id="how" class="how"><div class="section-heading"><span>01 / THE HARNESS</span><h2>一点依据，一点嘴替。</h2><p>两次 Jev 调用，不用聊天模型写小作文。</p></div><div class="steps"><article><span class="step">01</span><h3>把项目端上来</h3><p>固定一个 commit，抽取 README 和关键代码。最多 8 个文件，够看个大概。</p><code>GitHub → state</code></article><article><span class="step">02</span><h3>五个问题，拆开判</h3><p>适配度、必要性、实际含金量、宣传含水量，再给机器人项目加一道题。</p><code>5 × Choice → judgments</code></article><article><span class="step">03</span><h3>Jev 亲自落锤</h3><p>把分项判断交给 Jev，再用一个 Choice 选最终档位。拿不准，也能弃权。</p><code>1 × Choice → 从夯到拉</code></article></div></section>
+    <footer><span>JEV JUDGER <span class="footer-dot">/</span> 一本正经，仅供娱乐。</span><a href="https://docs.typesafe.ai/primitives/choice" target="_blank" rel="noreferrer">Jev native, literally. ↗</a></footer>
+  </main><script type="module" src="/app.js"></script>
+</body></html>

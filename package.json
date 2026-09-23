@@ -1,0 +1,9 @@
+{
+  "name": "jev-judger",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "用 Jev 审判 Jev，从夯到拉。",
+  "engines": { "node": ">=20.12" },
+  "scripts": { "start": "node server.mjs", "test": "node --test" }
+}
