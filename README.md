@@ -2,9 +2,9 @@
 
 # jev最严厉的父亲
 
-**jev-father：用 Jev 严格评价基于 Jev 的项目。不给鼓励分，只审项目，不审人。**
+**jev-father：用 Jev 评价基于 Jev 的项目。不给鼓励分，只审项目，不审人。**
 
-能跑只是起点，增量拿证据说话。输入公开 GitHub 仓库链接，看它是用在刀刃上，还是强行接入。全文分批审阅、保留正反依据，最后由 Jev Choice 在 **夯 / 顶级 / 人上人 / NPC / 拉** 中落锤。
+能跑只是起点，手速不等于创新。输入公开 GitHub 仓库链接，看它是用在刀刃上，还是强行蹭热度。全文分批审阅、保留正反依据，最后由 Jev Choice 在 **夯 / 顶级 / 人上人 / NPC / 拉** 中落锤。
 
 ## 让 Coding Agent 装好
 
@@ -24,3 +24,5 @@ Key 仅用于本次评审，经你自己的本地服务发送给 Jev 官方，�
 </details>
 
 [评审规则与实现细节](docs/harness.md) · [Jev Choice](https://docs.typesafe.ai/primitives/choice)
+
+免责声明：仅供娱乐，请勿用于任何严肃用途。
