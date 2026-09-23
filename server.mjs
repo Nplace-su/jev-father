@@ -11,6 +11,8 @@ let busy = false;
 const files = { '/': ['index.html', 'text/html'], '/app.js': ['app.js', 'text/javascript'], '/style.css': ['style.css', 'text/css'], '/favicon.svg': ['favicon.svg', 'image/svg+xml'] };
 function send(res, status, body) { res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify(body)); }
 const server = http.createServer(async (req, res) => {
+  let streaming = false;
+  const event = body => { if (!res.destroyed) res.write(JSON.stringify(body) + '\n'); };
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('Content-Security-Policy', "default-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'");
@@ -35,11 +37,20 @@ const server = http.createServer(async (req, res) => {
     parseRepo(input?.url);
     if (!process.env.TYPESAFE_API_KEY) return send(res, 503, { error: '还没配置 TYPESAFE_API_KEY。复制 .env.example 为 .env，填入密钥后重启服务。' });
     busy = true;
-    try { const repo = await collectRepo(input.url); send(res, 200, await judge(repo)); }
+    try {
+      streaming = req.headers.accept === 'application/x-ndjson';
+      if (streaming) res.writeHead(200, { 'Content-Type': 'application/x-ndjson; charset=utf-8', 'X-Accel-Buffering': 'no' });
+      const onProgress = message => { if (streaming) event({ type: 'progress', message }); };
+      const repo = await collectRepo(input.url, { onProgress });
+      const result = await judge(repo, { onProgress });
+      if (streaming) { event({ type: 'result', result }); res.end(); }
+      else send(res, 200, result);
+    }
     finally { busy = false; }
   } catch (e) {
     const message = e.name === 'TimeoutError' ? '远程服务超时，请稍后再试。' : e.message;
-    send(res, 400, { error: message });
+    if (streaming) { event({ type: 'error', error: message }); res.end(); }
+    else send(res, 400, { error: message });
   }
 });
 server.requestTimeout = 150_000;

@@ -9,6 +9,31 @@ async function request(path, options) {
   if (!response.ok) throw new Error(body.error || '请求失败，请重试。');
   return body;
 }
+
+async function judgeStream(url) {
+  const response = await fetch('/api/judge', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/x-ndjson' }, body: JSON.stringify({ url }) });
+  if (!response.ok) throw new Error((await response.json()).error || '请求失败。');
+  const reader = response.body.getReader(); const decoder = new TextDecoder(); let buffer = ''; let result;
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      buffer += done ? decoder.decode() : decoder.decode(value, { stream: true });
+      let newline;
+      while ((newline = buffer.indexOf('\n')) >= 0) {
+        const line = buffer.slice(0, newline); buffer = buffer.slice(newline + 1);
+        if (!line.trim()) continue;
+        const event = JSON.parse(line);
+        if (event.type === 'error') throw new Error(event.error);
+        if (event.type === 'progress') status(event.message, 'loading');
+        if (event.type === 'result') result = event.result;
+      }
+      if (done) break;
+    }
+  } finally { await reader.cancel().catch(() => {}); }
+  if (!result) throw new Error('连接中断，本次评价未完成，请重试。');
+  return result;
+}
+
 function status(message, type = '') {
   $('#status').hidden = !message;
   $('#status').className = type;
@@ -27,17 +52,23 @@ function render(result) {
   $('#result').innerHTML = `
     <div class="result-shell" style="--verdict:${esc(result.color)}">
       <div class="result-top"><b>${repoLabel}</b><span class="${result.demo ? 'demo-label' : ''}">${result.demo ? '虚构示例 · 预设结果 · 未调用 Jev' : `COMMIT ${esc(repo.sha.slice(0, 7))} · ${repo.files.length} 个文件`}</span></div>
-      <div class="verdict"><div class="stamp ${result.label.length > 2 ? 'long' : ''}">${esc(result.label)}</div><div class="verdict-copy"><small>THE JEV VERDICT / ${result.demo ? '示例判决' : 'JEV 终审'}</small><h2>${esc(result.line)}</h2><p>最终档位由 Jev Choice 选择 · 模型置信度 ${pct(result.confidence)}${result.demo ? '' : ` · 两次推理 ${(result.inferenceMs / 1000).toFixed(1)}s`}</p>${result.uncertain ? '<p class="warn">摇摆判决：Jev 自己也没太大把握。</p>' : ''}</div></div>
+      <div class="verdict"><div class="stamp ${result.label.length > 2 ? 'long' : ''}">${esc(result.label)}</div><div class="verdict-copy"><small>THE JEV VERDICT / ${result.demo ? '示例判决' : 'JEV 终审'}</small><h2>${esc(result.line)}</h2><p>最终档位由 Jev Choice 选择 · 模型置信度 ${pct(result.confidence)}${result.demo ? '' : ` · ${result.batchCount} 批全文 · ${result.calls} 次调用 · ${(result.inferenceMs / 1000).toFixed(1)}s`}</p>${result.uncertain ? '<p class="warn">摇摆判决：Jev 自己也没太大把握。</p>' : ''}</div></div>
       <div class="distribution">${Object.entries(result.probabilities).map(([name, value]) => `<div class="prob"><div><span>${esc(name)}</span><span>${pct(value)}</span></div><div class="prob-track"><div class="prob-fill" style="width:${Math.max(0, Math.min(100, value * 100))}%"></div></div></div>`).join('')}</div>
-      <div class="dimensions">${result.dimensions.map(d => `<article class="dimension"><h3>${esc(d.name)}</h3><div><strong>${esc(d.roast || d.reason)}</strong>${d.roast ? `<p>${esc(d.reason)}</p>` : ''}</div><span class="confidence" title="分项模型置信度">${d.skip ? '免考' : pct(d.confidence)}</span></article>`).join('')}</div>
+      <div class="dimensions">${result.dimensions.map(d => `<article class="dimension"><h3>${esc(d.name)}</h3><div><strong>${esc(d.roast || d.reason)}</strong>${d.roast ? `<p>${esc(d.reason)}</p>` : ''}${d.uncertain ? '<p class="warn">暂定倾向，置信度较低；已保留给终审参考。</p>' : ''}</div><span class="confidence" title="分项模型置信度">${d.skip ? '免考' : pct(d.confidence)}</span></article>`).join('')}</div>
     </div>
-    <p class="limitations">这是静态抽样的娱乐评价，未执行项目或核查外部实验；概率和置信度是模型输出，不是结论正确率。短评来自预写文案。${result.demo ? '此处全部数据均为虚构示例。' : ''}</p>
-    <details class="evidence"><summary>呈堂材料 · ${repo.files.length} / ${repo.totalFiles} 个文件 · 查看实际送审片段</summary><p>${esc(repo.description)}<br>固定版本：${esc(repo.sha)}${repo.treeTruncated ? '<br>GitHub 目录被截断，抽样范围不完整。' : ''}${repo.failedFiles.length ? `<br>读取失败：${esc(repo.failedFiles.join('、'))}` : ''}</p>${repo.files.map(f => `<details class="file"><summary>${esc(f.path)} ${f.excerpted ? '· 节选' : '· 全文'}</summary>${f.url ? `<p><a href="${esc(f.url)}" target="_blank" rel="noreferrer">查看此 commit 的原文件 ↗</a></p>` : ''}<pre>${esc(f.content)}</pre></details>`).join('')}</details>
-    <details class="evidence"><summary>打开引擎盖 · 两轮 state / questions / answers</summary><p>第一轮拆问题，第二轮选档位。中间没有聊天模型，也没有加权分数决定档位。</p><pre>${esc(JSON.stringify({ payloads: result.payloads, responses: result.raw }, null, 2))}</pre></details>
+    <p class="limitations">这是静态文本审阅的娱乐评价，未执行项目或核查外部实验；概率和置信度是模型输出，不是结论正确率。短评来自预写文案。${result.demo ? '此处全部数据均为虚构示例。' : ''}</p>
+    <details class="evidence"><summary>呈堂材料 · 已读 ${repo.files.length} / ${repo.eligibleFiles ?? repo.files.length} 个范围内文件 · 仓库共 ${repo.totalFiles} 个</summary><p>${esc(repo.description)}<br>固定版本：${esc(repo.sha)}${repo.treeTruncated ? '<br>GitHub 目录被截断，读取范围不完整。' : ''}${repo.failedFiles.length ? `<br>读取失败：${esc(repo.failedFiles.join('、'))}` : ''}</p>${repo.excludedFiles?.length ? `<details><summary>排除 ${repo.excludedFiles.length} 项，查看原因</summary><pre>${esc(repo.excludedFiles.map(f => `${f.path}：${f.reason}`).join('\n'))}</pre></details>` : ''}${repo.files.map((f, i) => `<details class="file" data-file="${i}"><summary>${esc(f.path)} ${f.excerpted ? '· 节选' : '· 全文'}</summary>${f.url ? `<p><a href="${esc(f.url)}" target="_blank" rel="noreferrer">查看此 commit 的原文件 ↗</a></p>` : ''}<pre></pre></details>`).join('')}</details>
+    <details class="evidence" id="engine"><summary>打开引擎盖 · 分批审阅 / 跨文件汇总 / 五档终审</summary><p>所有判断均为 Jev Choice。${result.batchCount ?? 1} 批全文，${result.mergeCalls ?? 0} 次汇总，1 次终审；没有加权分数定档。</p><pre></pre></details>
     <div class="result-actions"><button id="copy">复制判决</button><button id="download">下载 JSON</button></div>`;
   $('#result').hidden = false;
+  document.querySelectorAll('[data-file]').forEach(details => details.addEventListener('toggle', () => {
+    if (details.open) details.querySelector('pre').textContent = repo.files[Number(details.dataset.file)].content;
+  }));
+  $('#engine').addEventListener('toggle', () => {
+    if ($('#engine').open) $('#engine pre').textContent = JSON.stringify({ stages: result.stages, payloads: result.payloads, responses: result.raw }, null, 2);
+  });
   $('#copy').addEventListener('click', async () => {
-    const text = `${result.demo ? '【虚构示例，非真实评价】\n' : ''}${repo.fullName}：${result.label}\n${result.line}\n${result.dimensions.map(d => `${d.name}：${d.roast || d.reason}`).join('\n')}\nJev Judger · 静态抽样，仅供娱乐${repo.url ? `\n${repo.url}\ncommit: ${repo.sha}` : ''}`;
+    const text = `${result.demo ? '【虚构示例，非真实评价】\n' : ''}${repo.fullName}：${result.label}\n${result.line}\n${result.dimensions.map(d => `${d.name}：${d.roast || d.reason}`).join('\n')}\nJev Judger · 静态文本审阅，仅供娱乐${repo.url ? `\n${repo.url}\ncommit: ${repo.sha}` : ''}`;
     try { await navigator.clipboard.writeText(text); $('#copy').textContent = '已复制 ✓'; } catch { status('剪贴板不可用，请下载 JSON。', 'error'); }
   });
   $('#download').addEventListener('click', () => {
@@ -52,8 +83,8 @@ $('#judge-form').addEventListener('submit', async event => {
   const url = $('#repo-url').value.trim();
   if (!/^https:\/\/github\.com\/[^/]+\/[^/]+\/?$/.test(url)) return status('请填写 GitHub 仓库首页链接，例如 https://github.com/作者/项目。', 'error');
   $('#result').hidden = true;
-  setBusy(true); status('正在抽取仓库材料，再交给 Jev 分项判断与终审。通常需要几十秒。', 'loading');
-  try { render(await request('/api/judge', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) })); status(''); }
+  setBusy(true); status('正在读取仓库全文；读取与分批审阅进度会实时显示。', 'loading');
+  try { render(await judgeStream(url)); status(''); }
   catch (e) { status(e.message, 'error'); }
   finally { setBusy(false); }
 });
