@@ -26,7 +26,7 @@ const server = http.createServer(async (req, res) => {
       const content = await readFile(new URL(`public/${file}`, import.meta.url));
       res.writeHead(200, { 'Content-Type': `${type}; charset=utf-8` }); return res.end(content);
     }
-    if (req.method === 'GET' && req.url === '/api/health') return send(res, 200, { app: 'jev-judger', status: 'ready' });
+    if (req.method === 'GET' && req.url === '/api/health') return send(res, 200, { app: 'jev-father', status: 'ready' });
     if (req.method === 'GET' && req.url === '/api/config') return send(res, 200, { configured: !!configuredKey, model });
     if (req.method === 'GET' && req.url === '/api/demo') return send(res, 200, demoResult());
     if (req.method !== 'POST' || req.url !== '/api/judge') return send(res, 404, { error: '没有这个页面。' });
@@ -73,7 +73,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   });
   server.listen(port, '127.0.0.1', () => {
     const url = `http://localhost:${port}`;
-    console.log(`Jev Judger → ${url}\n仅本机访问。页面填写 Key 即可使用；按 Ctrl+C 停止。`);
+    console.log(`Jev Father → ${url}\n仅本机访问。页面填写 Key 即可使用；按 Ctrl+C 停止。`);
     process.send?.({ type: 'ready', url });
   });
 }

@@ -54,7 +54,7 @@ function render(result) {
   $('#result').innerHTML = `
     <div class="result-shell" style="--verdict:${esc(result.color)}">
       <div class="result-top"><b>${repoLabel}</b><span class="${result.demo ? 'demo-label' : ''}">${result.demo ? '虚构示例 · 预设结果 · 未调用 Jev' : `COMMIT ${esc(repo.sha.slice(0, 7))} · ${repo.files.length} 个文件`}</span></div>
-      <div class="verdict"><div class="stamp ${result.label.length > 2 ? 'long' : ''}">${esc(result.label)}</div><div class="verdict-copy"><small>THE JEV VERDICT / ${result.demo ? '示例判决' : 'JEV 终审'}</small><h2>${esc(result.line)}</h2><p>最终档位由 Jev Choice 选择 · 模型置信度 ${pct(result.confidence)}${result.demo ? '' : ` · ${result.batchCount} 批材料 · ${result.calls} 次调用 · ${(result.inferenceMs / 1000).toFixed(1)}s`}</p>${result.uncertain ? '<p class="warn">摇摆判决：Jev 自己也没太大把握。</p>' : ''}</div></div>
+      <div class="verdict"><div class="stamp ${result.label.length > 2 ? 'long' : ''}">${esc(result.label)}</div><div class="verdict-copy"><small>THE JEV VERDICT / ${result.demo ? '示例判决' : '父亲终审'}</small><h2>${esc(result.line)}</h2><p>最终档位由 Jev Choice 选择 · 模型置信度 ${pct(result.confidence)}${result.demo ? '' : ` · ${result.batchCount} 批材料 · ${result.calls} 次调用 · ${(result.inferenceMs / 1000).toFixed(1)}s`}</p>${result.uncertain ? '<p class="warn">摇摆判决：Jev 自己也没太大把握。</p>' : ''}</div></div>
       <div class="distribution">${Object.entries(result.probabilities).map(([name, value]) => `<div class="prob"><div><span>${esc(name)}</span><span>${pct(value)}</span></div><div class="prob-track"><div class="prob-fill" style="width:${Math.max(0, Math.min(100, value * 100))}%"></div></div></div>`).join('')}</div>
       <div class="dimensions">${result.dimensions.map(d => `<article class="dimension"><h3>${esc(d.name)}</h3><div><strong>${esc(d.roast || d.reason)}</strong>${d.roast ? `<p>${esc(d.reason)}</p>` : ''}${d.uncertain ? '<p class="warn">暂定倾向，模型判断有不确定性；已保留给终审参考。</p>' : ''}</div><span class="confidence" title="分项模型置信度">${d.skip ? '免考' : pct(d.confidence)}</span></article>`).join('')}</div>
     </div>
@@ -72,12 +72,12 @@ function render(result) {
     if ($('#engine').open) $('#engine pre').textContent = JSON.stringify({ preparation: result.preparation, evidence: result.evidence, usage: result.usage, stages: result.stages, payloads: result.payloads, responses: result.raw }, null, 2);
   });
   $('#copy').addEventListener('click', async () => {
-    const text = `${result.demo ? '【虚构示例，非真实评价】\n' : ''}${repo.fullName}：${result.label}\n${result.line}\n${result.dimensions.map(d => `${d.name}：${d.roast || d.reason}`).join('\n')}\nJev Judger · 静态文本审阅，仅供娱乐${repo.url ? `\n${repo.url}\ncommit: ${repo.sha}` : ''}`;
+    const text = `${result.demo ? '【虚构示例，非真实评价】\n' : ''}${repo.fullName}：${result.label}\n${result.line}\n${result.dimensions.map(d => `${d.name}：${d.roast || d.reason}`).join('\n')}\njev最严厉的父亲 · 静态文本审阅，仅供娱乐${repo.url ? `\n${repo.url}\ncommit: ${repo.sha}` : ''}`;
     try { await navigator.clipboard.writeText(text); $('#copy').textContent = '已复制 ✓'; } catch { status('剪贴板不可用，请下载 JSON。', 'error'); }
   });
   $('#download').addEventListener('click', () => {
     const url = URL.createObjectURL(new Blob([JSON.stringify(current, null, 2)], { type: 'application/json' }));
-    const a = document.createElement('a'); a.href = url; a.download = `jev-judgment-${repo.sha.slice(0, 7)}.json`; a.click();
+    const a = document.createElement('a'); a.href = url; a.download = `jev-father-${repo.sha.slice(0, 7)}.json`; a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   });
   $('#result').scrollIntoView({ behavior: 'smooth', block: 'start' });

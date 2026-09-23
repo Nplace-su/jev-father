@@ -19,7 +19,7 @@ async function isOurs(port) {
   try {
     const r = await fetch(`http://127.0.0.1:${port}/api/health`, { signal: AbortSignal.timeout(800), redirect: 'error' });
     const data = await r.json();
-    return r.ok && data.app === 'jev-judger' && data.status === 'ready';
+    return r.ok && data.app === 'jev-father' && data.status === 'ready';
   } catch { return false; }
 }
 async function isFree(port) {

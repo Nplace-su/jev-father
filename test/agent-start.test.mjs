@@ -30,7 +30,7 @@ test('agent launcher starts a clean checkout, skips unrelated services and reuse
   assert.equal(first.status, 'started');
   assert.ok(Number.isInteger(pid));
   assert.notEqual(new URL(first.url).port, String(basePort));
-  assert.deepEqual(await (await fetch(`${first.url}/api/health`)).json(), { app: 'jev-judger', status: 'ready' });
+  assert.deepEqual(await (await fetch(`${first.url}/api/health`)).json(), { app: 'jev-father', status: 'ready' });
   assert.equal((await (await fetch(`${first.url}/api/config`)).json()).configured, false);
   assert.match(await (await fetch(first.url)).text(), /你的 Jev API key/);
   assert.equal((await (await fetch(`${first.url}/api/demo`)).json()).demo, true);

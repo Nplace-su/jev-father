@@ -1,16 +1,16 @@
-![Jev Judger 前端页面](docs/images/preview.jpg)
+![jev最严厉的父亲 前端页面](docs/images/preview.jpg)
 
-# Jev Judger · 从夯到拉
+# jev最严厉的父亲
 
-**用 Jev 评价基于 Jev 的项目。娱乐法庭，只审项目，不审人。**
+**jev-father：用 Jev 严格评价基于 Jev 的项目。不给鼓励分，只审项目，不审人。**
 
-输入公开 GitHub 仓库链接，看它是用在刀刃上，还是强行接入。全文分批审阅、保留正反依据，最后由 Jev Choice 在 **夯 / 顶级 / 人上人 / NPC / 拉** 中落锤。
+能跑只是起点，增量拿证据说话。输入公开 GitHub 仓库链接，看它是用在刀刃上，还是强行接入。全文分批审阅、保留正反依据，最后由 Jev Choice 在 **夯 / 顶级 / 人上人 / NPC / 拉** 中落锤。
 
 ## 让 Coding Agent 装好
 
 把这段话发给 **Codex 或 Claude Code**：
 
-> 帮我安装并启动这个项目，打开本地网页：https://github.com/Nplace-su/jev-judger
+> 帮我安装并启动这个项目，打开本地网页：https://github.com/Nplace-su/jev-father
 
 Agent 会处理环境、启动本地服务并打开浏览器。你只需要填 **Jev API key + 公开仓库链接**。
 
