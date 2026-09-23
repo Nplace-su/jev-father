@@ -4,17 +4,34 @@
 
 输入一个公开 GitHub 仓库链接，读取范围内的全部源码、文档和配置，用 Jev 的结构化选择来判断：这次到底是用在刀刃上，还是强行接入？机器人项目加试职责边界。
 
-## 运行
+## 在自己电脑上使用
 
-需要 Node.js 20.12+，没有第三方依赖，无需 npm install。
+这是本地应用：GitHub 提供源码下载，本机 Node.js 服务负责调用 GitHub 和 Jev，浏览器负责交互。不需要购买服务器、部署云后端或安装依赖。只评公开 GitHub 仓库。
+
+1. 安装 [Node.js LTS](https://nodejs.org/)（最低 20.12）。
+2. 在仓库页面选择 **Code → Download ZIP**，解压到一个文件夹；也可以 `git clone`。
+3. Windows 双击 `start.cmd`；macOS 双击 `start.command`。浏览器会自动打开 <http://localhost:3210>。
+4. 在页面填写自己的 Jev API key 和公开 GitHub 仓库链接，点击「即刻开庭」。不填 Key 也可以看虚构示例。
+
+macOS 如果无法双击执行，或使用 Linux，在解压目录打开终端运行：
 
 ```sh
-cp .env.example .env
-# 在 .env 中填写 TYPESAFE_API_KEY
 npm start
 ```
 
-打开 <http://localhost:3210>。没有 key 也可以点击「先看一个虚构示例」，但不会对真实项目生成假评价。Key 只在后端读取；修改后重启。GitHub 优先使用 `GITHUB_TOKEN`，否则尝试复用本机 `gh auth login` 登录，仅在内存中读取 token；两者都没有时使用匿名额度。`JEV_MODEL` 默认 `jev-latest`。
+没有第三方依赖，**无需 `npm install`，无需先配置 `.env`**。使用期间保持启动终端开启；按 Ctrl+C 停止服务。自动打开浏览器失败时，手动访问终端显示的网址。服务器只监听 `127.0.0.1`，同一局域网的其他设备无法访问。
+
+### Key 怎么处理
+
+页面填写的 Key 提交后清空，仅随本次评审交给**自己电脑上的本地服务**，再作为鉴权发送给 `api.typesafe.ai`。应用不将它写入文件、浏览器存储、日志或评审导出，也不通过作者的服务器。它不会被用于 GitHub 请求。评审失败后重试需要重新填写。
+
+如希望在自己电脑上长期保存配置，可自行复制 `.env.example` 为 `.env` 并填写 `TYPESAFE_API_KEY`；这是可选的持久保存方式，修改后重启。页面填写的 Key 优先于 `.env`，仅覆盖本次。`.env` 已被 Git 忽略，不要分享该文件。
+
+GitHub 优先使用可选的 `GITHUB_TOKEN`，否则尝试复用本机 `gh auth login`，再退回匿名访问；仍拒绝私有仓库。匿名 API 额度耗尽时，按错误提示配置 GitHub token 或稍后重试。`JEV_MODEL` 默认 `jev-latest`，`PORT` 默认 `3210`；端口被占用时可在 `.env` 修改。设置 `JEV_NO_OPEN=1` 可以禁用自动打开浏览器。
+
+### 为什么不是 GitHub Pages
+
+纯静态网页需要 Jev 接口允许浏览器跨域调用。2026-09-23 对计划使用的 GitHub Pages 来源进行预检时，Jev 返回 `Disallowed CORS origin`。当前发布方式因此是下载后本地启动；本地服务发送 API 请求，不依赖浏览器到 Jev 的跨域许可。仓库若仍为私有，仅有访问权限的人能下载，面向所有人发布需要公开源码或另行提供可公开下载的发布包。
 
 ## Jev native 的全文 harness
 
@@ -57,7 +74,7 @@ GitHub URL
 npm test
 ```
 
-测试覆盖 URL 边界、全文件选择、全文分块无丢失、commit 固定、排除与失败项、低置信度保留、单次复核与正反证据保留、去重与全行日志统计、并发上限、接口失败及严格五档 Choice。离线测试使用 fixture，不证明真实 Jev 的判断质量；真实连通性需要自己的 API key。
+测试覆盖页面 Key 单次使用与错误路径、配置回退、跨站拒绝、URL 边界、全文件选择、全文分块无丢失、commit 固定、排除与失败项、低置信度保留、单次复核与正反证据保留、去重与全行日志统计、并发上限、接口失败及严格五档 Choice。离线测试使用 fixture，不证明真实 Jev 的判断质量；真实连通性需要自己的 API key。
 
 核心文件：`lib/github.mjs` 取证，`lib/rubric.mjs` 题目与短评，`lib/prepare.mjs` 材料准备，`lib/judge.mjs` 分批与复核接口，`public/` 页面。
 

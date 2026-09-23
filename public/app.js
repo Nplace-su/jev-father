@@ -2,6 +2,7 @@ const $ = selector => document.querySelector(selector);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const pct = value => `${Math.round(value * 100)}%`;
 let current;
+let configured = false;
 
 async function request(path, options) {
   const response = await fetch(path, options);
@@ -10,8 +11,8 @@ async function request(path, options) {
   return body;
 }
 
-async function judgeStream(url) {
-  const response = await fetch('/api/judge', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/x-ndjson' }, body: JSON.stringify({ url }) });
+async function judgeStream(url, apiKey) {
+  const response = await fetch('/api/judge', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/x-ndjson' }, body: JSON.stringify({ url, apiKey }) });
   if (!response.ok) throw new Error((await response.json()).error || '请求失败。');
   const reader = response.body.getReader(); const decoder = new TextDecoder(); let buffer = ''; let result;
   try {
@@ -43,6 +44,7 @@ function setBusy(busy) {
   $('#submit').disabled = busy;
   $('#demo').disabled = busy;
   $('#repo-url').disabled = busy;
+  $('#api-key').disabled = busy;
   $('#submit').textContent = busy ? '审理中…' : '即刻开庭 ↗';
 }
 function render(result) {
@@ -84,16 +86,24 @@ $('#judge-form').addEventListener('submit', async event => {
   event.preventDefault();
   const url = $('#repo-url').value.trim();
   if (!/^https:\/\/github\.com\/[^/]+\/[^/]+\/?$/.test(url)) return status('请填写 GitHub 仓库首页链接，例如 https://github.com/作者/项目。', 'error');
+  let apiKey = $('#api-key').value.trim();
+  if (!apiKey && !configured) return status('请先填写你的 Jev API key，也可以不填 Key 看虚构示例。', 'error');
+  $('#api-key').value = '';
   $('#result').hidden = true;
   setBusy(true); status('正在读取仓库全文；读取与分批审阅进度会实时显示。', 'loading');
-  try { render(await judgeStream(url)); status(''); }
+  try { render(await judgeStream(url, apiKey)); status(''); }
   catch (e) { status(e.message, 'error'); }
-  finally { setBusy(false); }
+  finally { apiKey = ''; setBusy(false); }
 });
 $('#demo').addEventListener('click', async () => {
   setBusy(true); status('');
   try { render(await request('/api/demo')); } catch (e) { status(e.message, 'error'); } finally { setBusy(false); }
 });
 request('/api/config').then(config => {
-  if (!config.configured) { $('#config').hidden = false; $('#config').textContent = '法官还没领到钥匙：在 .env 配置 TYPESAFE_API_KEY 后重启。现在可以先看虚构示例。'; }
+  configured = config.configured;
+  if (configured) {
+    $('#config').hidden = false;
+    $('#config').textContent = '已检测到本机配置的 Key。留空即可使用；在页面填写会仅覆盖本次评审。';
+    $('#api-key').placeholder = '可留空，使用本机配置的 Key';
+  }
 }).catch(() => status('连接不到本地服务，请确认 npm start 正在运行。', 'error'));

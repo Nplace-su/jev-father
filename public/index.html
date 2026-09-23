@@ -8,7 +8,7 @@
       <div class="eyebrow"><span class="live-dot"></span> POWERED BY JEV. JUDGING JEV.</div>
       <h1>是<span class="hot">夯</span>，还是<span class="cold">拉</span>？<br>让 Jev 自己说。</h1>
       <p class="intro">给项目贴上 Jev 的标签很容易。<br class="mobile-br"> 至于有没有必要，另说。</p>
-      <form id="judge-form"><label for="repo-url" class="sr-only">GitHub 仓库链接</label><div class="input-wrap"><span class="git-mark" aria-hidden="true">⌘</span><input id="repo-url" name="url" type="url" placeholder="https://github.com/someone/another-jev-project" autocomplete="off" required><button id="submit" type="submit">即刻开庭 <span>↗</span></button></div></form>
+      <form id="judge-form" autocomplete="off"><div class="key-field"><label for="api-key">你的 Jev API key</label><input id="api-key" type="password" placeholder="仅用于本次评审" autocomplete="off" spellcheck="false" autocapitalize="none" maxlength="1024" aria-describedby="key-help"><p id="key-help">仅经本机服务发送给 Jev 官方；不保存，提交后清空。评审使用你自己的额度。</p></div><label for="repo-url" class="sr-only">GitHub 仓库链接</label><div class="input-wrap"><span class="git-mark" aria-hidden="true">⌘</span><input id="repo-url" name="url" type="url" placeholder="https://github.com/someone/another-jev-project" autocomplete="off" required><button id="submit" type="submit">即刻开庭 <span>↗</span></button></div></form>
       <div class="form-meta"><span>公开仓库 · 全文分批读代码 · 只审项目，不审人</span><button id="demo" class="text-button">先看一个虚构示例 →</button></div>
       <p id="config" class="config" hidden></p><p id="status" role="status" aria-live="polite" hidden></p>
     </section>
