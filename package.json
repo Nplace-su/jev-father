@@ -5,5 +5,5 @@
   "type": "module",
   "description": "用 Jev 审判 Jev，从夯到拉。",
   "engines": { "node": ">=20.12" },
-  "scripts": { "start": "node scripts/start.mjs", "test": "node --test" }
+  "scripts": { "start": "node scripts/start.mjs", "start:agent": "node scripts/agent-start.mjs", "test": "node --test" }
 }

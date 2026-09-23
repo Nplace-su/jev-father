@@ -26,6 +26,7 @@ const server = http.createServer(async (req, res) => {
       const content = await readFile(new URL(`public/${file}`, import.meta.url));
       res.writeHead(200, { 'Content-Type': `${type}; charset=utf-8` }); return res.end(content);
     }
+    if (req.method === 'GET' && req.url === '/api/health') return send(res, 200, { app: 'jev-judger', status: 'ready' });
     if (req.method === 'GET' && req.url === '/api/config') return send(res, 200, { configured: !!configuredKey, model });
     if (req.method === 'GET' && req.url === '/api/demo') return send(res, 200, demoResult());
     if (req.method !== 'POST' || req.url !== '/api/judge') return send(res, 404, { error: '没有这个页面。' });
