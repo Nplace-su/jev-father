@@ -63,6 +63,20 @@ test('final tier comes directly from the final Choice, never a weighted score', 
   const final = { model: 'test', answers: { tier: sampleAnswer(FINAL_QUESTION, 'NPC') } };
   assert.equal(makeVerdict(demo.dimensions, final).label, 'NPC');
 });
+test('real close-choice response is retained instead of rejected or relabeled', () => {
+  const first = structuredClone(demoResult().raw[0]);
+  first.answers.substance = { type: 'choice', choice: 'unknown', confidence: 0.31,
+    probabilities: { unknown: 0.44, working: 0.08, empty: 0.01, thin: 0.02, solid: 0.45 } };
+  const dimension = readDimensions(first).find(d => d.id === 'substance');
+  assert.equal(dimension.choice, 'unknown');
+  assert.equal(dimension.probabilities.solid, 0.45);
+  assert.equal(dimension.distributionDisagrees, true);
+  assert.equal(dimension.uncertain, true);
+  const verdict = makeVerdict([], { answers: { tier: { type: 'choice', choice: '顶级', confidence: 0.7,
+    probabilities: { '夯': 0, '顶级': 0.44, '人上人': 0.45, 'NPC': 0.11, '拉': 0 } } } });
+  assert.equal(verdict.label, '顶级');
+  assert.equal(verdict.uncertain, true);
+});
 test('small repository needs only read and final requests without exposing the key', async () => {
   const demo = demoResult(); const calls = [];
   const output = await judge(demo.repo, { key: 'secret-fixture-key', fetchImpl: async (url, options) => {
